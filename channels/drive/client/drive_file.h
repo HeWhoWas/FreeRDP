@@ -23,11 +23,10 @@
  * limitations under the License.
  */
 
-#ifndef FREERDP_CHANNEL_DRIVE_FILE_H
-#define FREERDP_CHANNEL_DRIVE_FILE_H
+#ifndef FREERDP_CHANNEL_DRIVE_CLIENT_FILE_H
+#define FREERDP_CHANNEL_DRIVE_CLIENT_FILE_H
 
-#include <sys/types.h>
-#include <sys/stat.h>
+#include <winpr/stream.h>
 #include <freerdp/channels/log.h>
 
 #ifdef _WIN32
@@ -101,29 +100,35 @@ struct _DRIVE_FILE
 {
 	UINT32 id;
 	BOOL is_dir;
-	int fd;
-	int err;
-	DIR* dir;
-	char* basepath;
-	char* fullpath;
-	char* filename;
-	char* pattern;
+	HANDLE file_handle;
+	HANDLE find_handle;
+	WIN32_FIND_DATAW find_data;
+	WCHAR* basepath;
+	WCHAR* fullpath;
+	WCHAR* filename;
 	BOOL delete_pending;
+	UINT32 FileAttributes;
+	UINT32 SharedAccess;
+	UINT32 DesiredAccess;
+	UINT32 CreateDisposition;
+	UINT32 CreateOptions;
 };
 
-DRIVE_FILE* drive_file_new(const char* base_path, const char* path, UINT32 id,
-	UINT32 DesiredAccess, UINT32 CreateDisposition, UINT32 CreateOptions);
-void drive_file_free(DRIVE_FILE* file);
+DRIVE_FILE* drive_file_new(const WCHAR* base_path, const WCHAR* path, UINT32 PathLength, UINT32 id,
+                           UINT32 DesiredAccess, UINT32 CreateDisposition,
+                           UINT32 CreateOptions, UINT32 FileAttributes, UINT32 SharedAccess);
+BOOL drive_file_free(DRIVE_FILE* file);
 
+BOOL drive_file_open(DRIVE_FILE* file);
 BOOL drive_file_seek(DRIVE_FILE* file, UINT64 Offset);
 BOOL drive_file_read(DRIVE_FILE* file, BYTE* buffer, UINT32* Length);
 BOOL drive_file_write(DRIVE_FILE* file, BYTE* buffer, UINT32 Length);
 BOOL drive_file_query_information(DRIVE_FILE* file, UINT32 FsInformationClass, wStream* output);
-BOOL drive_file_set_information(DRIVE_FILE* file, UINT32 FsInformationClass, UINT32 Length, wStream* input);
+BOOL drive_file_set_information(DRIVE_FILE* file, UINT32 FsInformationClass, UINT32 Length,
+                                wStream* input);
 BOOL drive_file_query_directory(DRIVE_FILE* file, UINT32 FsInformationClass, BYTE InitialQuery,
-	const char* path, wStream* output);
-int dir_empty(const char *path);
+                                const WCHAR* path, UINT32 PathLength, wStream* output);
 
 extern UINT sys_code_page;
 
-#endif /* FREERDP_CHANNEL_DRIVE_FILE_H */
+#endif /* FREERDP_CHANNEL_DRIVE_CLIENT_FILE_H */
